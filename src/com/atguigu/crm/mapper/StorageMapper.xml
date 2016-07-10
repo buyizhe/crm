@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mapper.StorageMapper">
+	
+	<sql id="storageQueryCondition">
+		WHERE 1=1
+		<if test="wareHouse !=null and wareHouse != '%%'">
+			AND ware_House LIKE #{wareHouse}
+		</if>
+		<if test="productName !=null and productName != '%%'">
+			AND p.name LIKE #{productName}
+		</if>
+	</sql>
+	
+	<select id="getTotalElements" resultType="long">
+		SELECT count(s.id)
+		FROM storages s
+		LEFT OUTER JOIN products p
+		ON s.product_id = p.id
+		<include refid="storageQueryCondition"/>
+	</select>
+	
+	<resultMap type="com.atguigu.crm.entity.Storage" id="getStor">
+		<id column="id" property="id"/>
+		<result column="wareHouse" property="wareHouse"/>
+		<result column="stockWare" property="stockWare"/>
+		<result column="stockCount" property="stockCount"/>
+		<result column="memo" property="memo"/>
+		<association property="product" javaType="com.atguigu.crm.entity.Product">
+			<id column="id" property="id"/>
+			<result column="product_name" property="name"/>
+		</association>
+	</resultMap>
+	<select id="getContent" resultMap="getStor">
+		SELECT *
+		FROM (
+			SELECT rownum rn,s.id , p.name AS "product_name" , ware_House AS "wareHouse",
+					stock_Ware AS "stockWare",stock_Count AS "stockCount" ,s.memo,s.product_id
+			FROM storages s 
+			LEFT OUTER JOIN products p
+			ON s.product_id = p.id
+			<include refid="storageQueryCondition"/>
+		)g
+		<![CDATA[
+			WHERE rn >= #{fromIndex} AND rn < #{endIndex}
+		]]>
+	</select>
+	
+	<select id="getProducts" resultType="com.atguigu.crm.entity.Product">
+		select * FROM products
+	</select>
+	
+	<insert id="saveProduct">
+		
+		INSERT INTO storages (id, memo, stock_count, stock_ware, ware_house, product_id)
+		VALUES (CRM_SEQ.nextval, #{memo}, #{stockCount}, #{stockWare}, #{wareHouse}, #{product.id})
+	</insert>
+	
+	
+	<select id="getById" resultMap="getStor">
+		SELECT s.id , p.name AS "product_name" , ware_House AS "wareHouse",stock_Ware AS "stockWare",stock_Count AS "stockCount" ,s.memo,s.product_id
+		FROM storages s 
+		LEFT OUTER JOIN products p
+		ON s.product_id = p.id
+		WHERE s.id=#{id}
+	</select>
+	
+	<delete id="deleteStorage">
+		DELETE FROM storages WHERE id=#{id}
+	</delete>
+	
+	<update id="updateStorage">
+		UPDATE storages 
+		SET stock_count=#{stockCount}
+		WHERE id=#{id}
+	</update>
+	
+</mapper>

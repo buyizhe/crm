@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mapper.UserMapper">
+
+	<resultMap type="com.atguigu.crm.entity.User" id="userMap">
+		<id column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="enabled" property="enabled"/>
+		<result column="password" property="password"/>
+		<result column="role.name" property="role.name"/>
+		<result column="salt" property="salt"/>
+		<collection property="role.authorities" ofType="com.atguigu.crm.entity.Authority" >
+			<id column="a_id" property="id"/>
+			<result column="a_name" property="name"/>
+			<result column="a_display_name" property="displayName"/>
+			<result column="a_url" property="url"/>
+			
+			<result column="p_id" property="parentAuthority.id"/>
+			<result column="p_display_name" property="parentAuthority.displayName"/>
+			
+		</collection>
+	</resultMap>
+	<select id="getByName" resultMap="userMap">
+		SELECT u.id, u.name, u.enabled, password, salt,
+		r.name AS "role.name",
+		a.name AS "a_name",a.id AS "a_id" ,a.display_name AS "a_display_name", a.url AS "a_url",
+		p.id AS "p_id" , p.display_name AS "p_display_name"
+		FROM users u 
+		LEFT OUTER JOIN roles r
+		ON u.role_id = r.id
+		LEFT OUTER JOIN role_authority ra
+		ON r.id = ra.role_id
+		LEFT OUTER JOIN authorities a
+		ON a.id = ra.authority_id
+		LEFT OUTER JOIN authorities p
+		ON p.id = a.parent_authority_id
+		WHERE u.name = #{name}
+	</select>
+	
+	<sql id="userQueryContect">
+			WHERE 1=1
+		<if test="name!=null and name!='%%'">
+			AND name LIKE #{name}
+		</if>
+		<if test="enabled != null and enabled != ''">
+			AND enabled LIKE #{enabled}
+		</if>
+	</sql>
+		
+	<select id="getContent" resultType="com.atguigu.crm.entity.User">
+		SELECT *
+		FROM (
+			SELECT rownum rn ,id, name, enabled
+			FROM users
+			<include refid="userQueryContect"/>
+		)s
+		<![CDATA[
+			WHERE rn >= #{fromIndex} AND rn < #{endIndex}
+		]]>
+		
+		
+	</select>
+	
+	<select id="getTotalElements" resultType="long">
+		SELECT count(id)
+		FROM users
+		<include refid="userQueryContect"/>
+	</select>
+	
+	<select id="getRoles" resultType="com.atguigu.crm.entity.Role">
+		SELECT id,description,enabled,name
+		FROM roles
+	</select>
+
+	<insert id="saveUser">
+		INSERT INTO users (id,name,password,role_id,enabled)
+		VALUES (CRM_SEQ.nextval,#{name},#{password},#{role.id},#{enabled})
+	</insert>
+	
+	<select id="getById" resultType="com.atguigu.crm.entity.User">
+		SELECT id,name,password,role_id,enabled
+		FROM users
+		WHERE id=#{id}
+	</select>
+	
+	<update id="updateUser">
+		UPDATE users set name=#{name},password=#{password},role_id=#{role.id},enabled=#{enabled}
+		WHERE id=#{id}
+	</update>
+	
+	<delete id="deleteUser">
+		DELETE FROM users WHERE id=#{id}
+	</delete>
+
+</mapper>

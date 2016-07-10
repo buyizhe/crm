@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mapper.CustomerMapper">
+		
+	<select id="getManagersById" resultType="com.atguigu.crm.entity.Contact">
+		SELECT name, id
+		FROM contacts
+		WHERE customer_id=#{id}
+	</select>
+	
+	
+	<resultMap type="java.lang.String" id="map"></resultMap>
+	
+	<select id="getCredits" resultMap="map">
+		SELECT item AS "credit"
+		FROM dicts
+		WHERE type=#{type}
+	</select>
+	
+	<select id="getSatisfies" resultMap="map">
+		SELECT item AS "satisfy"
+		FROM dicts
+		WHERE type=#{type}
+	</select>
+	
+	<select id="getLevels" resultMap="map">
+		SELECT item AS "level"
+		FROM dicts
+		WHERE type=#{type}
+	</select>
+	
+	<select id="getRegions" resultMap="map">
+		SELECT item AS "region"
+		FROM dicts
+		WHERE type=#{type}
+		<!-- WHERE id IN(18,19,20,21,22,28) -->
+	</select>
+	
+	<select id="getCustomerById" resultType="com.atguigu.crm.entity.Customer">
+		SELECT id,no,name,region,manager_id AS "manager.id",customer_level AS "level",state,satify,credit,address,zip,tel,fax,websit,licence_no,chief,bankroll,turnover,bank,bank_account,local_tax_no,national_tax_no
+		FROM customers
+		WHERE id=#{id}
+	</select>
+	
+	<update id="updateCustomer">
+		UPDATE customers
+		SET name= #{name},region=#{region},manager_id=#{manager.id},customer_level=#{level},state=#{state},satify=#{satify},credit=#{credit},address=#{address},zip=#{zip},tel=#{tel},fax=#{fax},websit=#{websit},licence_no=#{licenceNo,jdbcType=VARCHAR},chief=#{chief},bankroll=#{bankroll,jdbcType=NUMERIC},turnover=#{turnover,jdbcType=NUMERIC},bank=#{bank},bank_account=#{bankAccount},local_tax_no=#{localTaxNo,jdbcType=VARCHAR},national_tax_no=#{nationalTaxNo,jdbcType=VARCHAR}
+		WHERE id= #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE customers SET state = #{state}
+		WHERE id = #{id}
+	</update>
+
+	<insert id="insertCustomerForFinisChance">
+		<selectKey keyProperty="id" order="BEFORE" resultType="long">
+			SELECT CRM_SEQ.nextval FROM dual
+		</selectKey>
+		INSERT INTO customers(id, name, no, state) 
+		VALUES (#{id}, #{name}, #{no}, #{state})
+	</insert>
+	
+	<!-- 把查询条件额外的提取出来. -->
+	<sql id="customerQueryCondition">
+		WHERE 1 = 1
+		<if test="managerName != null and managerName != '%%'">
+			AND co.name LIKE #{managerName}
+		</if>
+		<if test="name != null and name != '%%'">
+			AND cu.name LIKE #{name}
+		</if>
+		<if test="region != null and region != ''">
+			AND region LIKE #{region}
+		</if>
+		<if test="level != null and level != ''">
+			AND customer_level LIKE #{level}
+		</if>
+		<if test="state != null and state != ''">
+			AND state LIKE #{state}
+		</if>
+	</sql>
+	
+	<resultMap type="com.atguigu.crm.entity.Customer" id="getBy">
+		<id column="id" property="id"/>
+		<result column="no" property="no"/>
+		<result column="customer_name" property="name"/>
+		<result column="region" property="region"/>
+		<result column="customer_level" property="level"/>
+		<result column="state" property="state"/>
+		<association property="manager" javaType="com.atguigu.crm.entity.Contact">
+			<id column="manager_id" property="id"/>
+			<result column="contact_name" property="name"/>
+		</association>
+	</resultMap>
+	
+	<select id="getContent" resultMap="getBy">
+		SELECT *
+		FROM(
+			SELECT rownum rn, cu.id, no, cu.name AS "customer_name", region, customer_level, state, manager_id, co.name AS "contact_name"
+			FROM customers cu
+			LEFT OUTER JOIN contacts co
+	    	ON co.id = cu.manager_id 
+			<include refid="customerQueryCondition"/>
+		)s
+		<![CDATA[
+		WHERE rn >= #{fromIndex} AND rn < #{endIndex}
+		]]>
+	</select>
+	
+	<select id="getTotalElements" resultType="long">
+		SELECT count(cu.id)
+		FROM customers cu
+		LEFT OUTER JOIN contacts co
+	    ON co.id = cu.manager_id 
+		<include refid="customerQueryCondition"/>
+	</select>
+	
+	<select id="getById" resultType="com.atguigu.crm.entity.Customer">
+		SELECT id, address, bank, bank_account, bankroll, chief, credit, fax, licence_no, local_tax_no, NAME, national_tax_no, NO, REGION, satify, state, tel, turnover, websit, zip, manager_id, customer_level AS "level" 
+		FROM customers t 
+		WHERE id = #{id}
+	</select>
+	
+	<select id="getAllCustomer" resultType="com.atguigu.crm.entity.Customer">
+		SELECT id , name FROM customers
+	</select>
+	
+</mapper>

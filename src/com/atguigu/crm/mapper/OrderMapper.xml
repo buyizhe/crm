@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mapper.OrderMapper">
+
+	<resultMap type="com.atguigu.crm.entity.Order" id="getOrderOrderItem">
+		<id column="id" property="id"/>
+		<result column="no" property="no"/>
+		<result column="customer_id" property="customer.id"/>
+		<result column="order_date" property="date"/>
+		<result column="address" property="address"/>
+		<result column="status" property="status"/>
+		<collection property="items" javaType="com.atguigu.crm.entity.OrderItem">
+			<id column="oi.id" property="id"/>
+			<result column="item_count" property="count"/>
+			<result column="money" property="money"/>
+			<result column="order_id" property="order.id"/>
+			<association property="product" javaType="com.atguigu.crm.entity.Product">
+				<id column="product_id" property="id"/>
+				<result column="batch" property="batch"/>
+				<result column="memo" property="memo"/>
+				<result column="name" property="name"/>
+				<result column="price" property="price"/>
+				<result column="type" property="type"/>
+				<result column="unit" property="unit"/>
+			</association>
+		</collection>
+	</resultMap>
+
+	<select id="getOrder" resultMap="getOrderOrderItem">
+		SELECT o.id, address, order_date, no, status, customer_id, 
+		oi.id, item_count, money, order_id, product_id, 
+		batch, memo, name, price, type, unit
+		FROM orders o
+		LEFT OUTER JOIN order_items oi
+		ON oi.order_id = o.id
+		LEFT OUTER JOIN products p
+		ON p.id = oi.product_id
+		WHERE o.id = #{id}
+	</select>
+
+	<select id="getContent" resultType="com.atguigu.crm.entity.Order">
+		SELECT *
+		FROM(
+			SELECT rownum rn, id, address, order_date AS "date", no, status
+			FROM orders
+			WHERE customer_id = #{id}
+		) s
+		<![CDATA[
+		WHERE rn >= #{fromIndex} AND rn < #{endIndex}
+		]]>
+	</select>
+
+	<select id="getTotalElements" resultType="long">
+		SELECT count(id)
+		FROM orders
+		WHERE customer_id = #{id}
+	</select>
+
+</mapper>

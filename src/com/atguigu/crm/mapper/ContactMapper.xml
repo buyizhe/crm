@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mapper.ContactMapper">
+
+	<insert id="insertContactForFinshChance">
+		INSERT INTO contacts (id, name, tel, customer_id) 
+		VALUES (CRM_SEQ.nextval, #{name}, #{tel}, #{customer.id}) 
+	</insert>
+	
+	<select id="getContect" resultType="com.atguigu.crm.entity.Contact">
+		SELECT *
+     		FROM(
+     			SELECT ROWNUM rn, id, memo, mobile, name, position, sex, tel, customer_id FROM CONTACTS 
+     			WHERE customer_id = #{customerId}
+		) s
+		<![CDATA[
+		WHERE rn >= #{fromIndex} AND rn < #{endIndex}
+		]]>
+	</select>
+	
+	<select id="getTotalElements" resultType="long">
+		SELECT COUNT(id) FROM contacts WHERE customer_id = #{customerId}
+	</select>
+	
+	<insert id="save">
+		INSERT INTO contacts(id, memo, mobile, name, position, sex, tel, customer_id)
+		VALUES(CRM_SEQ.nextval, #{memo}, #{mobile}, #{name}, #{position}, #{sex}, #{tel}, #{customer.id})	
+	</insert>
+
+
+	<delete id="delete">
+		DELETE FROM contacts WHERE id = #{id}
+	</delete>
+	
+	<select id="getById" resultType="com.atguigu.crm.entity.Contact">
+		SELECT id, memo, mobile, name, position, sex, tel, customer_id 
+		FROM CONTACTS 
+		WHERE id = #{id}
+	</select>
+	
+	<update id="update">
+		UPDATE contacts SET memo = #{memo}, mobile = #{mobile}, name = #{name}, position = #{position}, sex = #{sex}, tel = #{tel} 
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getCountForCustomerId" resultType="long">
+		SELECT COUNT(id) FROM contacts WHERE customer_id = #{customerId}
+	</select>
+	
+</mapper>

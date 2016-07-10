@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mapper.CustomerServiceMapper">
+
+	<resultMap type="java.lang.String" id="getMap"></resultMap>
+	<select id="getAllType" resultMap="getMap">
+		SELECT service_type FROM customer_services 
+	</select>
+	
+	<insert id="saveService">
+		INSERT INTO customer_services (id, service_type, service_title, customer_id, service_state, service_request ,create_date )
+		VALUES (CRM_SEQ.nextval,#{serviceType}, #{serviceTitle}, #{customer.id}, #{serviceState}, #{serviceRequest}, #{createDate})
+	</insert>
+	
+</mapper>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mapper.CustomerActivityMapper">
+
+	<delete id="delete">
+		delete from customer_activities where id = #{activityId}
+	</delete>
+
+	<update id="update">
+		update customer_activities 
+			set activity_date = #{date},description=#{description},
+			place=#{place},title=#{title} where id=#{id}
+	</update>
+
+	<select id="getCustomerActivityById" resultType="com.atguigu.crm.entity.CustomerActivity">
+		select id,activity_date as "date",
+		 		 description,place,title,
+		 		 customer_id as "customer.id" 
+		 		 from customer_activities 
+		 		 where id = #{id}
+	</select>
+
+	<insert id="save">
+		insert into customer_activities 
+		(id,activity_date,description,place,title,customer_id)
+		values(CRM_SEQ.nextval,#{date},#{description},#{place},#{title},#{customer.id})
+	</insert>
+
+	<select id="getContent" resultType="com.atguigu.crm.entity.CustomerActivity">
+		select * from
+		 (select rownum rn , id,activity_date as "date",
+		 		 description,place,title,
+		 		 customer_id as "customer.id" 
+		 		 from customer_activities 
+		 		 where customer_id = #{customerId} order by id desc
+		) s 
+		<![CDATA[
+			where s.rn >= #{fromIndex} and s.rn< #{endIndex}
+		]]>
+	</select>
+
+	<select id="getTotalElements" resultType="long">
+		select count(*) from customer_activities where customer_id = #{customerId}
+	</select>
+</mapper>
